@@ -68,7 +68,8 @@ service ModelMesh {
   rpc getVModelVariantsStatus (VModelVariantsStatusRequest) returns (VModelVariantsStatus) {}
 
   // Write application-specific metric
-  rpc writeAppSpecificMetric (AppSpecificMetric) returns (google.protobuf.Empty) {}  
+  // Intended to include business metrics relevant to the application
+  rpc writeApplicationMetric (ApplicationMetric) returns (google.protobuf.Empty) {}
 
 
 }
@@ -150,8 +151,8 @@ message VModelVariantsStatusRequest {
     string vModelId = 1;
 }
 
-// To begin with, app specific metrics will enable collection of counter metrics
-message AppSpecificMetric {
+// To begin with, application specific metrics will enable collection of counter metrics
+message ApplicationMetric {
     // ID of the VModel
     string vModelId = 1;
 
