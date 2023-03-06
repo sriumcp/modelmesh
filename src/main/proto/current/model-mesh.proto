@@ -21,6 +21,8 @@ option java_package = "com.ibm.watson.modelmesh.api";
 option go_package = "/mmesh";
 option java_multiple_files = true;
 
+import "google/protobuf/empty.proto";
+
 // this is a grpc version of the external model-mesh interface
 // for managing and serving models
 service ModelMesh {
@@ -57,6 +59,113 @@ service ModelMesh {
 
   //TODO ensureVModelLoaded TBD
 
+  // Following RPCs provide the foundations for incremental rollouts
+
+  // specify how concrete models are linked to a vmodel
+  rpc specifyVModelVariants (VModelVariantsSpec) returns (VModelVariantsStatus) {}
+
+  // Gets the current linkages between concrete models and a vmodel
+  rpc getVModelVariantsStatus (VModelVariantsStatusRequest) returns (VModelVariantsStatus) {}
+
+  // Write application-specific metric
+  // Intended to include business metrics relevant to the application
+  rpc writeApplicationMetric (ApplicationMetric) returns (google.protobuf.Empty) {}
+
+
+}
+
+message VModelVariantsSpec {
+    // ID of the VModel
+    string vModelId = 1;
+    // if true, routing obeys user stickiness across vmodel variants
+    // i.e., holding all other things fixed, a given user will always be routed to the same variant
+    // this field is ignored if the variant is (not a primary && traffic is mirrored)
+    // if false, we have a random split of requests without stickiness
+    bool sticky = 2;
+    // the userIdField provides the meta data field to be used as user Id
+    // ignored if routing is not sticky
+    string userIdField = 3;
+    // vModelVersion has a role that is similar to resource version in Kubernetes resources
+    uint32 vModelVersion = 4;
+
+    // define a variant, i.e., a concrete model, that is linked to this vmodel
+    message Variant {
+        // ID of the concrete model
+        string modelId = 1;
+        // is this the primary variant?
+        // exactly one of the vmodel variants must be primary
+        bool primary = 2; 
+        // if true, traffic is mirrored to this variant from the primary
+        // ignored if this is the primary variant
+        bool mirror = 3;
+        // weight is interpreted differently for different use-cases
+        // if traffic is mirrored to this variant, then weight is % of primary traffic (e.g., 60%)
+        // if traffic is not mirrored, and sticky, then weight is the relative proportion of users
+        // if traffic is not mirrored and not sticky, then weight is the relative proportion of requests
+        uint32 weight = 4;
+    }
+
+    // variable length array of variants
+    repeated Variant variants = 5;
+}
+
+// difference between VModelVariantsSpec & Status is in the `status` field
+message VModelVariantsStatus {
+    // ID of the VModel
+    string vModelId = 1;
+    // if true, routing obeys user stickiness across vmodel variants
+    // i.e., holding all other things fixed, a given user will always be routed to the same variant
+    // this field is ignored if the variant is (not a primary && traffic is mirrored)
+    // if false, we have a random split of requests without stickiness
+    bool sticky = 2;
+    // the userIdField provides the meta data field to be used as user Id
+    // ignored if routing is not sticky
+    string userIdField = 3;
+
+    // define a variant, i.e., a concrete model, that is linked to this vmodel
+    message Variant {
+        // ID of the concrete model
+        string modelId = 1;
+        // is this the primary variant?
+        // exactly one of the vmodel variants must be primary
+        bool primary = 2; 
+        // if true, traffic is mirrored to this variant from the primary
+        // ignored if this is the primary variant
+        bool mirror = 3;
+        // meta data filters for this variant
+        repeated string filters = 5;
+        // weight is interpreted differently for different use-cases
+        // if traffic is mirrored to this variant, then weight is % of primary traffic (e.g., 60%)
+        // if traffic is not mirrored, and sticky, then weight is the relative proportion of users
+        // if traffic is not mirrored and not sticky, then weight is the relative proportion of requests
+        uint32 weight = 4;
+        // model status
+        ModelStatusInfo.ModelStatus status = 6;
+    }
+
+    // variable length array of variants
+    repeated Variant variants = 4;
+}
+
+
+message VModelVariantsStatusRequest {
+    // ID of the VModel
+    string vModelId = 1;
+}
+
+// To begin with, application specific metrics will enable collection of counter metrics
+message ApplicationMetric {
+    // ID of the VModel
+    string vModelId = 1;
+
+    // ID of the user
+    string user = 2;
+
+    // ID of the metric
+    string metric = 3;
+
+    // Value of the metric
+    double value = 4;
 }
 
 
