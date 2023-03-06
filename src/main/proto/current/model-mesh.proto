@@ -132,13 +132,15 @@ message VModelVariantsStatus {
         // if true, traffic is mirrored to this variant from the primary
         // ignored if this is the primary variant
         bool mirror = 3;
+        // meta data filters for this variant
+        repeated string filter = 5;
         // weight is interpreted differently for different use-cases
         // if traffic is mirrored to this variant, then weight is % of primary traffic (e.g., 60%)
         // if traffic is not mirrored, and sticky, then weight is the relative proportion of users
         // if traffic is not mirrored and not sticky, then weight is the relative proportion of requests
         uint32 weight = 4;
         // model status
-        ModelStatusInfo.ModelStatus status = 5;
+        ModelStatusInfo.ModelStatus status = 6;
     }
 
     // variable length array of variants
