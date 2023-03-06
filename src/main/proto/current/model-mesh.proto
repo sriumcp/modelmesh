@@ -133,7 +133,7 @@ message VModelVariantsStatus {
         // ignored if this is the primary variant
         bool mirror = 3;
         // meta data filters for this variant
-        repeated string filter = 5;
+        repeated string filters = 5;
         // weight is interpreted differently for different use-cases
         // if traffic is mirrored to this variant, then weight is % of primary traffic (e.g., 60%)
         // if traffic is not mirrored, and sticky, then weight is the relative proportion of users
